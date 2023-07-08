@@ -32,12 +32,13 @@ async function run(): Promise<void> {
           let leftLineNumber = 0
           let rightLineNumber = 0
           for (const line of lines) {
+            core.debug(line)
             const lineNumbers = line.match(/@@ -(\d+),\d+ \+(\d+),\d+ @@/)
             if (lineNumbers) {
-              leftLineNumber = parseInt(lineNumbers[0])
-              rightLineNumber = parseInt(lineNumbers[1])
+              core.debug(JSON.stringify(lineNumbers))
+              leftLineNumber = parseInt(lineNumbers[1])
+              rightLineNumber = parseInt(lineNumbers[2])
             } else if (line.startsWith('+')) {
-              rightLineNumber++
               core.debug(
                 `Posting review comment to ${file.filename} - RIGHT - ${rightLineNumber}`
               )
@@ -51,8 +52,8 @@ async function run(): Promise<void> {
                 side: 'RIGHT',
                 commit_id: latestCommitSHA
               })
+              rightLineNumber++
             } else if (line.startsWith('-')) {
-              leftLineNumber++
               core.debug(
                 `Posting review comment to ${file.filename} - LEFT - ${leftLineNumber}`
               )
@@ -66,6 +67,7 @@ async function run(): Promise<void> {
                 side: 'LEFT',
                 commit_id: latestCommitSHA
               })
+              leftLineNumber++
             } else {
               leftLineNumber++
               rightLineNumber++
