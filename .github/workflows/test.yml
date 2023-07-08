@@ -22,3 +22,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./
+        with:
+          minEpoch: 946684800
