@@ -58,67 +58,64 @@ function run() {
             const octokit = github.getOctokit(githubToken);
             const context = github.context;
             if (context.payload.pull_request) {
-                const files = yield octokit.paginate(octokit.rest.pulls.listFiles, {
+                const commits = yield octokit.paginate(octokit.rest.pulls.listCommits, {
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     pull_number: context.payload.pull_request.number
                 }, response => response.data);
-                const commits = yield octokit.rest.pulls.listCommits({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: context.payload.pull_request.number
-                });
-                const latestCommitSHA = commits.data[0].sha;
-                core.debug(latestCommitSHA);
                 try {
-                    for (var _e = true, files_1 = __asyncValues(files), files_1_1; files_1_1 = yield files_1.next(), _a = files_1_1.done, !_a;) {
-                        _c = files_1_1.value;
+                    for (var _e = true, commits_1 = __asyncValues(commits), commits_1_1; commits_1_1 = yield commits_1.next(), _a = commits_1_1.done, !_a;) {
+                        _c = commits_1_1.value;
                         _e = false;
                         try {
-                            const file = _c;
-                            const lines = (_d = file.patch) === null || _d === void 0 ? void 0 : _d.split(/\r\n|\r|\n/);
-                            if (lines) {
-                                let leftLineNumber = 0;
-                                let rightLineNumber = 0;
-                                for (const line of lines) {
-                                    core.debug(line);
-                                    const lineNumbers = line.match(/@@ -(\d+),\d+ \+(\d+),\d+ @@/);
-                                    if (lineNumbers) {
-                                        core.debug(JSON.stringify(lineNumbers));
-                                        leftLineNumber = parseInt(lineNumbers[1]);
-                                        rightLineNumber = parseInt(lineNumbers[2]);
-                                    }
-                                    else if (line.startsWith('+')) {
-                                        core.debug(`Posting review comment to ${file.filename} - LEFT - ${leftLineNumber}`);
-                                        yield octokit.rest.pulls.createReviewComment({
-                                            owner: context.repo.owner,
-                                            repo: context.repo.repo,
-                                            pull_number: context.payload.pull_request.number,
-                                            body: `Test - ${leftLineNumber} - LEFT - ${line}`,
-                                            path: file.filename,
-                                            line: leftLineNumber,
-                                            side: 'LEFT',
-                                            commit_id: latestCommitSHA
-                                        });
-                                        leftLineNumber++;
-                                    }
-                                    else if (line.startsWith('-')) {
-                                        core.debug(`Posting review comment to ${file.filename} - RIGHT - ${rightLineNumber}`);
-                                        yield octokit.rest.pulls.createReviewComment({
-                                            owner: context.repo.owner,
-                                            repo: context.repo.repo,
-                                            pull_number: context.payload.pull_request.number,
-                                            body: `Test - ${rightLineNumber} - RIGHT - ${line}`,
-                                            path: file.filename,
-                                            line: rightLineNumber,
-                                            side: 'RIGHT',
-                                            commit_id: latestCommitSHA
-                                        });
-                                        rightLineNumber++;
-                                    }
-                                    else {
-                                        leftLineNumber++;
-                                        rightLineNumber++;
+                            const commit = _c;
+                            if (commit.files) {
+                                for (const file of commit.files) {
+                                    const lines = (_d = file.patch) === null || _d === void 0 ? void 0 : _d.split(/\r\n|\r|\n/);
+                                    if (lines) {
+                                        let leftLineNumber = 0;
+                                        let rightLineNumber = 0;
+                                        for (const line of lines) {
+                                            core.debug(line);
+                                            const lineNumbers = line.match(/@@ -(\d+),\d+ \+(\d+),\d+ @@/);
+                                            if (lineNumbers) {
+                                                core.debug(JSON.stringify(lineNumbers));
+                                                leftLineNumber = parseInt(lineNumbers[1]);
+                                                rightLineNumber = parseInt(lineNumbers[2]);
+                                            }
+                                            else if (line.startsWith('+')) {
+                                                core.debug(`Posting review comment to ${file.filename} - LEFT - ${leftLineNumber}`);
+                                                yield octokit.rest.pulls.createReviewComment({
+                                                    owner: context.repo.owner,
+                                                    repo: context.repo.repo,
+                                                    pull_number: context.payload.pull_request.number,
+                                                    body: `Test - ${leftLineNumber} - LEFT - ${line}`,
+                                                    path: file.filename,
+                                                    line: leftLineNumber,
+                                                    side: 'LEFT',
+                                                    commit_id: commit.sha
+                                                });
+                                                leftLineNumber++;
+                                            }
+                                            else if (line.startsWith('-')) {
+                                                core.debug(`Posting review comment to ${file.filename} - RIGHT - ${rightLineNumber}`);
+                                                yield octokit.rest.pulls.createReviewComment({
+                                                    owner: context.repo.owner,
+                                                    repo: context.repo.repo,
+                                                    pull_number: context.payload.pull_request.number,
+                                                    body: `Test - ${rightLineNumber} - RIGHT - ${line}`,
+                                                    path: file.filename,
+                                                    line: rightLineNumber,
+                                                    side: 'RIGHT',
+                                                    commit_id: commit.sha
+                                                });
+                                                rightLineNumber++;
+                                            }
+                                            else {
+                                                leftLineNumber++;
+                                                rightLineNumber++;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -131,7 +128,7 @@ function run() {
                 catch (e_1_1) { e_1 = { error: e_1_1 }; }
                 finally {
                     try {
-                        if (!_e && !_a && (_b = files_1.return)) yield _b.call(files_1);
+                        if (!_e && !_a && (_b = commits_1.return)) yield _b.call(commits_1);
                     }
                     finally { if (e_1) throw e_1.error; }
                 }
