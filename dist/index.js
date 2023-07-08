@@ -61,7 +61,7 @@ function run() {
                 const commits = yield octokit.paginate(octokit.rest.pulls.listCommits, {
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    pull_number: context.payload.pull_request.number,
+                    pull_number: context.payload.pull_request.number
                 }, response => response.data);
                 try {
                     for (var _e = true, commits_1 = __asyncValues(commits), commits_1_1; commits_1_1 = yield commits_1.next(), _a = commits_1_1.done, !_a;) {
@@ -73,7 +73,7 @@ function run() {
                             const fullCommit = yield octokit.rest.repos.getCommit({
                                 owner: context.repo.owner,
                                 repo: context.repo.repo,
-                                ref: commit.sha,
+                                ref: commit.sha
                             });
                             if (fullCommit.data.files) {
                                 for (const file of fullCommit.data.files) {
@@ -91,20 +91,6 @@ function run() {
                                                 rightLineNumber = parseInt(lineNumbers[2]);
                                             }
                                             else if (line.startsWith('+')) {
-                                                core.debug(`Posting review comment to ${file.filename} - LEFT - ${leftLineNumber}`);
-                                                yield octokit.rest.pulls.createReviewComment({
-                                                    owner: context.repo.owner,
-                                                    repo: context.repo.repo,
-                                                    pull_number: context.payload.pull_request.number,
-                                                    body: `Test - ${leftLineNumber} - LEFT - ${line}`,
-                                                    path: file.filename,
-                                                    line: leftLineNumber,
-                                                    side: 'LEFT',
-                                                    commit_id: commit.sha
-                                                });
-                                                leftLineNumber++;
-                                            }
-                                            else if (line.startsWith('-')) {
                                                 core.debug(`Posting review comment to ${file.filename} - RIGHT - ${rightLineNumber}`);
                                                 yield octokit.rest.pulls.createReviewComment({
                                                     owner: context.repo.owner,
@@ -117,6 +103,20 @@ function run() {
                                                     commit_id: commit.sha
                                                 });
                                                 rightLineNumber++;
+                                            }
+                                            else if (line.startsWith('-')) {
+                                                core.debug(`Posting review comment to ${file.filename} - LEFT - ${leftLineNumber}`);
+                                                yield octokit.rest.pulls.createReviewComment({
+                                                    owner: context.repo.owner,
+                                                    repo: context.repo.repo,
+                                                    pull_number: context.payload.pull_request.number,
+                                                    body: `Test - ${leftLineNumber} - LEFT - ${line}`,
+                                                    path: file.filename,
+                                                    line: leftLineNumber,
+                                                    side: 'LEFT',
+                                                    commit_id: commit.sha
+                                                });
+                                                leftLineNumber++;
                                             }
                                             else {
                                                 leftLineNumber++;
