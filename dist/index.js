@@ -88,7 +88,7 @@ function run() {
                                             body: `Test - ${line}`,
                                             path: file.filename,
                                             line: rightLineNumber,
-                                            side: 'RIGHT',
+                                            side: 'RIGHT'
                                         });
                                     }
                                     else if (line.startsWith('-')) {
@@ -100,7 +100,7 @@ function run() {
                                             body: `Test - ${line}`,
                                             path: file.filename,
                                             line: leftLineNumber,
-                                            side: 'LEFT',
+                                            side: 'LEFT'
                                         });
                                     }
                                     else {
