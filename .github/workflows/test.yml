@@ -24,4 +24,4 @@ jobs:
       - uses: ./
         with:
           # Add comment to test mid-commit history 946684800
-          minEpoch: 946684800
+          minEpoch: 946684799
