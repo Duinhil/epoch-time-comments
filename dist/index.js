@@ -61,7 +61,7 @@ function run() {
                 const commits = yield octokit.paginate(octokit.rest.pulls.listCommits, {
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    pull_number: context.payload.pull_request.number
+                    pull_number: context.payload.pull_request.number,
                 }, response => response.data);
                 try {
                     for (var _e = true, commits_1 = __asyncValues(commits), commits_1_1; commits_1_1 = yield commits_1.next(), _a = commits_1_1.done, !_a;) {
@@ -69,14 +69,21 @@ function run() {
                         _e = false;
                         try {
                             const commit = _c;
-                            if (commit.files) {
-                                for (const file of commit.files) {
+                            core.debug(`Processing ${commit.sha}`);
+                            const fullCommit = yield octokit.rest.repos.getCommit({
+                                owner: context.repo.owner,
+                                repo: context.repo.repo,
+                                ref: commit.sha,
+                            });
+                            if (fullCommit.data.files) {
+                                for (const file of fullCommit.data.files) {
+                                    core.debug(`Processing ${file.filename}`);
                                     const lines = (_d = file.patch) === null || _d === void 0 ? void 0 : _d.split(/\r\n|\r|\n/);
                                     if (lines) {
                                         let leftLineNumber = 0;
                                         let rightLineNumber = 0;
                                         for (const line of lines) {
-                                            core.debug(line);
+                                            core.debug(`Processing ${line}`);
                                             const lineNumbers = line.match(/@@ -(\d+),\d+ \+(\d+),\d+ @@/);
                                             if (lineNumbers) {
                                                 core.debug(JSON.stringify(lineNumbers));
