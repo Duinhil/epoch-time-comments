@@ -18,6 +18,14 @@ async function run(): Promise<void> {
         },
         response => response.data
       )
+      const commits = await octokit.rest.pulls.listCommits({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        pull_number: context.payload.pull_request.number
+      })
+
+      const latestCommitSHA = commits.data[0].sha
+      core.debug(latestCommitSHA)
       for await (const file of files) {
         const lines = file.patch?.split(/\r\n|\r|\n/)
         if (lines) {
@@ -30,25 +38,33 @@ async function run(): Promise<void> {
               rightLineNumber = parseInt(lineNumbers[1])
             } else if (line.startsWith('+')) {
               rightLineNumber++
+              core.debug(
+                `Posting review comment to ${file.filename} - RIGHT - ${rightLineNumber}`
+              )
               await octokit.rest.pulls.createReviewComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: context.payload.pull_request.number,
-                body: `Test - ${line}`,
+                body: `Test - ${rightLineNumber} - RIGHT - ${line}`,
                 path: file.filename,
                 line: rightLineNumber,
-                side: 'RIGHT'
+                side: 'RIGHT',
+                commit_id: latestCommitSHA
               })
             } else if (line.startsWith('-')) {
               leftLineNumber++
+              core.debug(
+                `Posting review comment to ${file.filename} - LEFT - ${leftLineNumber}`
+              )
               await octokit.rest.pulls.createReviewComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: context.payload.pull_request.number,
-                body: `Test - ${line}`,
+                body: `Test - ${leftLineNumber} - LEFT - ${line}`,
                 path: file.filename,
                 line: leftLineNumber,
-                side: 'LEFT'
+                side: 'LEFT',
+                commit_id: latestCommitSHA
               })
             } else {
               leftLineNumber++

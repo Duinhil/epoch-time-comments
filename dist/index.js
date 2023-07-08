@@ -63,6 +63,13 @@ function run() {
                     repo: context.repo.repo,
                     pull_number: context.payload.pull_request.number
                 }, response => response.data);
+                const commits = yield octokit.rest.pulls.listCommits({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: context.payload.pull_request.number
+                });
+                const latestCommitSHA = commits.data[0].sha;
+                core.debug(latestCommitSHA);
                 try {
                     for (var _e = true, files_1 = __asyncValues(files), files_1_1; files_1_1 = yield files_1.next(), _a = files_1_1.done, !_a;) {
                         _c = files_1_1.value;
@@ -81,26 +88,30 @@ function run() {
                                     }
                                     else if (line.startsWith('+')) {
                                         rightLineNumber++;
+                                        core.debug(`Posting review comment to ${file.filename} - RIGHT - ${rightLineNumber}`);
                                         yield octokit.rest.pulls.createReviewComment({
                                             owner: context.repo.owner,
                                             repo: context.repo.repo,
                                             pull_number: context.payload.pull_request.number,
-                                            body: `Test - ${line}`,
+                                            body: `Test - ${rightLineNumber} - RIGHT - ${line}`,
                                             path: file.filename,
                                             line: rightLineNumber,
-                                            side: 'RIGHT'
+                                            side: 'RIGHT',
+                                            commit_id: latestCommitSHA
                                         });
                                     }
                                     else if (line.startsWith('-')) {
                                         leftLineNumber++;
+                                        core.debug(`Posting review comment to ${file.filename} - LEFT - ${leftLineNumber}`);
                                         yield octokit.rest.pulls.createReviewComment({
                                             owner: context.repo.owner,
                                             repo: context.repo.repo,
                                             pull_number: context.payload.pull_request.number,
-                                            body: `Test - ${line}`,
+                                            body: `Test - ${leftLineNumber} - LEFT - ${line}`,
                                             path: file.filename,
                                             line: leftLineNumber,
-                                            side: 'LEFT'
+                                            side: 'LEFT',
+                                            commit_id: latestCommitSHA
                                         });
                                     }
                                     else {
