@@ -40,21 +40,6 @@ async function run(): Promise<void> {
               rightLineNumber = parseInt(lineNumbers[2])
             } else if (line.startsWith('+')) {
               core.debug(
-                `Posting review comment to ${file.filename} - RIGHT - ${rightLineNumber}`
-              )
-              await octokit.rest.pulls.createReviewComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.payload.pull_request.number,
-                body: `Test - ${rightLineNumber} - RIGHT - ${line}`,
-                path: file.filename,
-                line: rightLineNumber,
-                side: 'RIGHT',
-                commit_id: latestCommitSHA
-              })
-              rightLineNumber++
-            } else if (line.startsWith('-')) {
-              core.debug(
                 `Posting review comment to ${file.filename} - LEFT - ${leftLineNumber}`
               )
               await octokit.rest.pulls.createReviewComment({
@@ -68,6 +53,21 @@ async function run(): Promise<void> {
                 commit_id: latestCommitSHA
               })
               leftLineNumber++
+            } else if (line.startsWith('-')) {
+              core.debug(
+                `Posting review comment to ${file.filename} - RIGHT - ${rightLineNumber}`
+              )
+              await octokit.rest.pulls.createReviewComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                body: `Test - ${rightLineNumber} - RIGHT - ${line}`,
+                path: file.filename,
+                line: rightLineNumber,
+                side: 'RIGHT',
+                commit_id: latestCommitSHA
+              })
+              rightLineNumber++
             } else {
               leftLineNumber++
               rightLineNumber++
