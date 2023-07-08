@@ -50,9 +50,10 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
     var _a, e_1, _b, _c;
+    var _d;
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            core.debug("Started run");
+            core.debug('Started run');
             const githubToken = core.getInput('GITHUB_TOKEN');
             const octokit = github.getOctokit(githubToken);
             const context = github.context;
@@ -63,22 +64,61 @@ function run() {
                     pull_number: context.payload.pull_request.number
                 }, response => response.data);
                 try {
-                    for (var _d = true, files_1 = __asyncValues(files), files_1_1; files_1_1 = yield files_1.next(), _a = files_1_1.done, !_a;) {
+                    for (var _e = true, files_1 = __asyncValues(files), files_1_1; files_1_1 = yield files_1.next(), _a = files_1_1.done, !_a;) {
                         _c = files_1_1.value;
-                        _d = false;
+                        _e = false;
                         try {
                             const file = _c;
-                            core.debug(`${file.filename} - ${file.patch}`);
+                            const lines = (_d = file.patch) === null || _d === void 0 ? void 0 : _d.split(/\r\n|\r|\n/);
+                            if (lines) {
+                                let leftLineNumber = 0;
+                                let rightLineNumber = 0;
+                                for (const line of lines) {
+                                    const lineNumbers = line.match(/@@ -(\d+),\d+ \+(\d+),\d+ @@/);
+                                    if (lineNumbers) {
+                                        leftLineNumber = parseInt(lineNumbers[0]);
+                                        rightLineNumber = parseInt(lineNumbers[1]);
+                                    }
+                                    else if (line.startsWith('+')) {
+                                        rightLineNumber++;
+                                        yield octokit.rest.pulls.createReviewComment({
+                                            owner: context.repo.owner,
+                                            repo: context.repo.repo,
+                                            pull_number: context.payload.pull_request.number,
+                                            body: `Test - ${line}`,
+                                            path: file.filename,
+                                            line: rightLineNumber,
+                                            side: 'RIGHT',
+                                        });
+                                    }
+                                    else if (line.startsWith('-')) {
+                                        leftLineNumber++;
+                                        yield octokit.rest.pulls.createReviewComment({
+                                            owner: context.repo.owner,
+                                            repo: context.repo.repo,
+                                            pull_number: context.payload.pull_request.number,
+                                            body: `Test - ${line}`,
+                                            path: file.filename,
+                                            line: leftLineNumber,
+                                            side: 'LEFT',
+                                        });
+                                    }
+                                    else {
+                                        leftLineNumber++;
+                                        rightLineNumber++;
+                                    }
+                                }
+                            }
                         }
                         finally {
-                            _d = true;
+                            _e = true;
                         }
                     }
                 }
                 catch (e_1_1) { e_1 = { error: e_1_1 }; }
                 finally {
                     try {
-                        if (!_d && !_a && (_b = files_1.return)) yield _b.call(files_1);
+                        if (!_e && !_a && (_b = files_1.return)) yield _b.call(files_1);
                     }
                     finally { if (e_1) throw e_1.error; }
                 }
