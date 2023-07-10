@@ -69,6 +69,7 @@ async function commentCommits(
       response => response.data
     )
 
+    core.debug(JSON.stringify(reviews))
     const reviewIdsToClean = reviews
       .filter(
         review =>
@@ -77,6 +78,7 @@ async function commentCommits(
           review.body.startsWith('Commenting epoch timers')
       )
       .map(review => review.id)
+    core.debug(JSON.stringify(reviewIdsToClean))
     const reviewComments = await octokit.paginate(
       octokit.rest.pulls.listReviewComments,
       {
@@ -86,6 +88,7 @@ async function commentCommits(
       },
       response => response.data
     )
+    core.debug(JSON.stringify(reviewComments))
     const commentsToDelete = reviewComments
       .filter(
         reviewComment =>
@@ -93,6 +96,7 @@ async function commentCommits(
           reviewIdsToClean.includes(reviewComment.pull_request_review_id)
       )
       .map(reviewComment => reviewComment.id)
+    core.debug(JSON.stringify(commentsToDelete))
     const commentDeletePromises = commentsToDelete.map(async commentId =>
       octokit.rest.pulls.deleteReviewComment({
         owner: context.repo.owner,
