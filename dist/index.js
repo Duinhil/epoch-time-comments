@@ -151,14 +151,22 @@ function commentCommits(octokit, context, minEpoch, maxLineLength) {
             }
             if (comments.length > 0) {
                 core.debug('Posting review');
-                yield octokit.rest.pulls.createReview({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: context.payload.pull_request.number,
-                    body: 'Commenting epoch timers',
-                    event: 'COMMENT',
-                    comments
-                });
+                try {
+                    yield octokit.rest.pulls.createReview({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        pull_number: context.payload.pull_request.number,
+                        body: 'Commenting epoch timers',
+                        event: 'COMMENT',
+                        comments
+                    });
+                }
+                catch (error) {
+                    if (error instanceof Error) {
+                        core.debug("error posting review");
+                        core.debug(error.message);
+                    }
+                }
             }
             core.debug('Deleting old comments');
             yield Promise.all(commentDeletePromises);
