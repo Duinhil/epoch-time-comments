@@ -152,6 +152,11 @@ async function commentCommits(
     if (comments.length > 0) {
       core.debug('Posting review')
       core.debug(comments.toString())
+      let rateLimit = await octokit.rest.rateLimit.get()
+      core.debug(rateLimit.data.rate.limit.toString())
+      core.debug(rateLimit.data.rate.remaining.toString())
+      core.debug(rateLimit.data.rate.reset.toString())
+      core.debug(rateLimit.data.rate.used.toString())
       try {
         await octokit.rest.pulls.createReview({
           owner: context.repo.owner,
@@ -165,6 +170,12 @@ async function commentCommits(
         if (error instanceof Error) {
           core.debug('error posting review')
           core.debug(error.message)
+          core.debug(error.name)
+          rateLimit = await octokit.rest.rateLimit.get()
+          core.debug(rateLimit.data.rate.limit.toString())
+          core.debug(rateLimit.data.rate.remaining.toString())
+          core.debug(rateLimit.data.rate.reset.toString())
+          core.debug(rateLimit.data.rate.used.toString())
         }
       }
     }

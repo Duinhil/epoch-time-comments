@@ -152,6 +152,11 @@ function commentCommits(octokit, context, minEpoch, maxLineLength) {
             if (comments.length > 0) {
                 core.debug('Posting review');
                 core.debug(comments.toString());
+                let rateLimit = yield octokit.rest.rateLimit.get();
+                core.debug(rateLimit.data.rate.limit.toString());
+                core.debug(rateLimit.data.rate.remaining.toString());
+                core.debug(rateLimit.data.rate.reset.toString());
+                core.debug(rateLimit.data.rate.used.toString());
                 try {
                     yield octokit.rest.pulls.createReview({
                         owner: context.repo.owner,
@@ -166,6 +171,12 @@ function commentCommits(octokit, context, minEpoch, maxLineLength) {
                     if (error instanceof Error) {
                         core.debug('error posting review');
                         core.debug(error.message);
+                        core.debug(error.name);
+                        rateLimit = yield octokit.rest.rateLimit.get();
+                        core.debug(rateLimit.data.rate.limit.toString());
+                        core.debug(rateLimit.data.rate.remaining.toString());
+                        core.debug(rateLimit.data.rate.reset.toString());
+                        core.debug(rateLimit.data.rate.used.toString());
                     }
                 }
             }
