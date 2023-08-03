@@ -69,6 +69,7 @@ async function commentCommits(
       response => response.data
     )
 
+    core.debug(JSON.stringify(reviews))
     const reviewIdsToClean = reviews
       .filter(
         review =>
@@ -77,6 +78,7 @@ async function commentCommits(
           review.body.startsWith('Commenting epoch timers')
       )
       .map(review => review.id)
+    core.debug(JSON.stringify(reviewIdsToClean))
     const reviewComments = await octokit.paginate(
       octokit.rest.pulls.listReviewComments,
       {
@@ -86,6 +88,7 @@ async function commentCommits(
       },
       response => response.data
     )
+    core.debug(JSON.stringify(reviewComments))
     const commentsToDelete = reviewComments
       .filter(
         reviewComment =>
@@ -93,6 +96,7 @@ async function commentCommits(
           reviewIdsToClean.includes(reviewComment.pull_request_review_id)
       )
       .map(reviewComment => reviewComment.id)
+    core.debug(JSON.stringify(commentsToDelete))
     const commentDeletePromises = commentsToDelete.map(async commentId =>
       octokit.rest.pulls.deleteReviewComment({
         owner: context.repo.owner,
@@ -147,14 +151,39 @@ async function commentCommits(
 
     if (comments.length > 0) {
       core.debug('Posting review')
-      await octokit.rest.pulls.createReview({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        pull_number: context.payload.pull_request.number,
-        body: 'Commenting epoch timers',
-        event: 'COMMENT',
-        comments
-      })
+      core.debug(comments.toString())
+      let rateLimit = await octokit.rest.rateLimit.get()
+      core.debug(rateLimit.data.rate.limit.toString())
+      core.debug(rateLimit.data.rate.remaining.toString())
+      core.debug(rateLimit.data.rate.reset.toString())
+      core.debug(rateLimit.data.rate.used.toString())
+      try {
+        await octokit.rest.pulls.createReview({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          pull_number: context.payload.pull_request.number,
+          body: 'Commenting epoch timers',
+          event: 'COMMENT',
+          comments
+        })
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+      } catch (error: any) {
+        if (error instanceof Error) {
+          core.debug('error posting review')
+          core.debug(error.message)
+          core.debug(error.name)
+          rateLimit = await octokit.rest.rateLimit.get()
+          core.debug(rateLimit.data.rate.limit.toString())
+          core.debug(rateLimit.data.rate.remaining.toString())
+          core.debug(rateLimit.data.rate.reset.toString())
+          core.debug(rateLimit.data.rate.used.toString())
+        }
+        core.debug(JSON.stringify(error))
+        /* eslint-disable github/array-foreach */
+        Object.entries(error).forEach(([key, value]) =>
+          core.debug(`${key}: ${value}`)
+        )
+      }
     }
 
     core.debug('Deleting old comments')

@@ -84,6 +84,7 @@ function commentCommits(octokit, context, minEpoch, maxLineLength) {
                 repo: context.repo.repo,
                 pull_number: context.payload.pull_request.number
             }, response => response.data);
+            core.debug(JSON.stringify(reviews));
             const reviewIdsToClean = reviews
                 .filter(review => {
                 var _a;
@@ -92,15 +93,18 @@ function commentCommits(octokit, context, minEpoch, maxLineLength) {
                     review.body.startsWith('Commenting epoch timers');
             })
                 .map(review => review.id);
+            core.debug(JSON.stringify(reviewIdsToClean));
             const reviewComments = yield octokit.paginate(octokit.rest.pulls.listReviewComments, {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: context.payload.pull_request.number
             }, response => response.data);
+            core.debug(JSON.stringify(reviewComments));
             const commentsToDelete = reviewComments
                 .filter(reviewComment => reviewComment.pull_request_review_id != null &&
                 reviewIdsToClean.includes(reviewComment.pull_request_review_id))
                 .map(reviewComment => reviewComment.id);
+            core.debug(JSON.stringify(commentsToDelete));
             const commentDeletePromises = commentsToDelete.map((commentId) => __awaiter(this, void 0, void 0, function* () {
                 return octokit.rest.pulls.deleteReviewComment({
                     owner: context.repo.owner,
@@ -147,14 +151,38 @@ function commentCommits(octokit, context, minEpoch, maxLineLength) {
             }
             if (comments.length > 0) {
                 core.debug('Posting review');
-                yield octokit.rest.pulls.createReview({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: context.payload.pull_request.number,
-                    body: 'Commenting epoch timers',
-                    event: 'COMMENT',
-                    comments
-                });
+                core.debug(comments.toString());
+                let rateLimit = yield octokit.rest.rateLimit.get();
+                core.debug(rateLimit.data.rate.limit.toString());
+                core.debug(rateLimit.data.rate.remaining.toString());
+                core.debug(rateLimit.data.rate.reset.toString());
+                core.debug(rateLimit.data.rate.used.toString());
+                try {
+                    yield octokit.rest.pulls.createReview({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        pull_number: context.payload.pull_request.number,
+                        body: 'Commenting epoch timers',
+                        event: 'COMMENT',
+                        comments
+                    });
+                    /* eslint-disable @typescript-eslint/no-explicit-any */
+                }
+                catch (error) {
+                    if (error instanceof Error) {
+                        core.debug('error posting review');
+                        core.debug(error.message);
+                        core.debug(error.name);
+                        rateLimit = yield octokit.rest.rateLimit.get();
+                        core.debug(rateLimit.data.rate.limit.toString());
+                        core.debug(rateLimit.data.rate.remaining.toString());
+                        core.debug(rateLimit.data.rate.reset.toString());
+                        core.debug(rateLimit.data.rate.used.toString());
+                    }
+                    core.debug(JSON.stringify(error));
+                    /* eslint-disable github/array-foreach */
+                    Object.entries(error).forEach(([key, value]) => core.debug(`${key}: ${value}`));
+                }
             }
             core.debug('Deleting old comments');
             yield Promise.all(commentDeletePromises);
