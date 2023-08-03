@@ -166,6 +166,7 @@ function commentCommits(octokit, context, minEpoch, maxLineLength) {
                         event: 'COMMENT',
                         comments
                     });
+                    /* eslint-disable @typescript-eslint/no-explicit-any */
                 }
                 catch (error) {
                     if (error instanceof Error) {
@@ -178,6 +179,8 @@ function commentCommits(octokit, context, minEpoch, maxLineLength) {
                         core.debug(rateLimit.data.rate.reset.toString());
                         core.debug(rateLimit.data.rate.used.toString());
                     }
+                    /* eslint-disable github/array-foreach */
+                    Object.entries(error).forEach(([key, value]) => core.debug(`${key}: ${value}`));
                 }
             }
             core.debug('Deleting old comments');

@@ -166,7 +166,8 @@ async function commentCommits(
           event: 'COMMENT',
           comments
         })
-      } catch (error) {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+      } catch (error: any) {
         if (error instanceof Error) {
           core.debug('error posting review')
           core.debug(error.message)
@@ -177,6 +178,10 @@ async function commentCommits(
           core.debug(rateLimit.data.rate.reset.toString())
           core.debug(rateLimit.data.rate.used.toString())
         }
+        /* eslint-disable github/array-foreach */
+        Object.entries(error).forEach(([key, value]) =>
+          core.debug(`${key}: ${value}`)
+        )
       }
     }
 
