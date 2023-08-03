@@ -151,6 +151,7 @@ async function commentCommits(
 
     if (comments.length > 0) {
       core.debug('Posting review')
+      core.debug(comments.toString())
       try {
         await octokit.rest.pulls.createReview({
           owner: context.repo.owner,

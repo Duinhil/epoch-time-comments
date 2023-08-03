@@ -151,6 +151,7 @@ function commentCommits(octokit, context, minEpoch, maxLineLength) {
             }
             if (comments.length > 0) {
                 core.debug('Posting review');
+                core.debug(comments.toString());
                 try {
                     yield octokit.rest.pulls.createReview({
                         owner: context.repo.owner,
@@ -163,7 +164,7 @@ function commentCommits(octokit, context, minEpoch, maxLineLength) {
                 }
                 catch (error) {
                     if (error instanceof Error) {
-                        core.debug("error posting review");
+                        core.debug('error posting review');
                         core.debug(error.message);
                     }
                 }
