@@ -179,6 +179,7 @@ function commentCommits(octokit, context, minEpoch, maxLineLength) {
                         core.debug(rateLimit.data.rate.reset.toString());
                         core.debug(rateLimit.data.rate.used.toString());
                     }
+                    core.debug(JSON.stringify(error));
                     /* eslint-disable github/array-foreach */
                     Object.entries(error).forEach(([key, value]) => core.debug(`${key}: ${value}`));
                 }
